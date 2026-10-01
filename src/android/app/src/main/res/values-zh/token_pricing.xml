@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="token_price_title">模型 Token 单价</string>
+    <string name="token_price_input">输入</string>
+    <string name="token_price_output">输出</string>
+    <string name="token_price_cache_read">缓存读取</string>
+    <string name="token_price_cache_write">缓存写入</string>
+    <string name="token_price_unknown">未知</string>
+    <string name="token_price_editor_footer">留空继承 models.dev 默认单价。单位：USD/百万 Tokens。缓存输入与未缓存输入分别计费。</string>
+    <string name="token_price_invalid">请输入非负有限数。</string>
+    <string name="token_price_reset">恢复默认单价</string>
+    <string name="token_price_list_footer">单位：USD/百万 Tokens。点击模型可编辑输入、输出和缓存单价。</string>
+    <string name="token_price_no_models">尚未配置模型</string>
+    <string name="token_cost_estimate">估算消费</string>
+    <string name="token_cost_footer">按当前单价估算，并非历史账单。老数据的模型归属可能为估计；缺失价格时总消费显示未知。</string>
+    <string name="token_cost_partial">已知 %1$s · 总消费未知</string>
+</resources>

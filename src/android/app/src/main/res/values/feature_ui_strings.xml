@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_ui_preparing">准备中</string>
+    <string name="feature_ui_running">运行中</string>
+    <string name="feature_ui_success">已完成</string>
+    <string name="feature_ui_failed">失败</string>
+    <string name="feature_ui_timeout">超时</string>
+    <string name="feature_ui_stopped">已停止</string>
+    <string name="feature_ui_expand">展开</string>
+    <string name="feature_ui_collapse">收起</string>
+    <string name="feature_ui_details">查看详情</string>
+    <string name="feature_ui_tool_input">调用参数</string>
+    <string name="feature_ui_tool_output">执行结果</string>
+    <string name="feature_ui_thinking">模型思考</string>
+    <string name="feature_ui_thinking_done">思考结束</string>
+    <string name="feature_ui_undo_compact">撤销压缩</string>
+    <string name="feature_ui_redo_compact">恢复压缩</string>
+    <string name="feature_ui_compact_restoring">正在恢复对话…</string>
+    <string name="feature_ui_wait_network">正在等待网络恢复</string>
+    <string name="feature_ui_wait_network_hint">恢复连接后会自动继续，最多等待 60 秒。</string>
+    <string name="feature_ui_retry_now">立即重试</string>
+    <string name="feature_ui_stop_waiting">停止等待</string>
+    <string name="feature_ui_inspect_failure">查看失败原因</string>
+    <string name="feature_ui_resume_agent">继续子代理</string>
+    <string name="feature_ui_start_agent">启动子代理</string>
+    <string name="feature_ui_stop_agent">停止子代理</string>
+    <string name="feature_ui_waiting_queued">已进入队列，等待执行</string>
+</resources>

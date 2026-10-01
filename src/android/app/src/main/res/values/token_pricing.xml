@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="token_price_title">Token prices</string>
+    <string name="token_price_input">Input</string>
+    <string name="token_price_output">Output</string>
+    <string name="token_price_cache_read">Cache read</string>
+    <string name="token_price_cache_write">Cache write</string>
+    <string name="token_price_unknown">Unknown</string>
+    <string name="token_price_editor_footer">Leave blank to inherit models.dev prices. All prices are USD per million tokens. Cached input is charged separately from fresh input.</string>
+    <string name="token_price_invalid">Enter a finite, non-negative number.</string>
+    <string name="token_price_reset">Restore default prices</string>
+    <string name="token_price_list_footer">USD per million tokens. Tap a model to edit input, output and cache prices.</string>
+    <string name="token_price_no_models">No models configured</string>
+    <string name="token_cost_estimate">Estimated cost</string>
+    <string name="token_cost_footer">Estimates use current prices, not historical invoices. Legacy model attribution may be estimated. Missing prices make the total unknown.</string>
+    <string name="token_cost_partial">%1$s known · total unknown</string>
+</resources>

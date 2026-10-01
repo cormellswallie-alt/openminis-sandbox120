@@ -1,0 +1,8 @@
+# Manually selected startup and CPU paths, to be refined with device traces.
+HSPLcom/openminis/app/MinisApp;->onCreate()V
+HSPLcom/openminis/app/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HLcom/openminis/app/ui/markdown/MarkdownParser;->**(**)**
+HLcom/openminis/app/ui/terminal/emulator/AnsiParser;->**(**)**
+HLcom/openminis/app/ui/terminal/emulator/TerminalBuffer;->**(**)**
+HLcom/openminis/app/ui/terminal/canvas/TerminalNativeView;->**(**)**
+HLcom/openminis/app/provider/ModelReleaseIndex;->**(**)**

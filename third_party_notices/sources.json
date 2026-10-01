@@ -1,0 +1,242 @@
+[
+  {
+    "file": "katex/LICENSE",
+    "component": "KaTeX",
+    "version": "0.16.21",
+    "url": "https://raw.githubusercontent.com/KaTeX/KaTeX/v0.16.21/LICENSE",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/KaTeX/KaTeX/contents/LICENSE?ref=v0.16.21",
+    "git_blob_sha": "37c6433e3bedca7a97e08fe35d98582a5f7bac0c",
+    "bytes": 1107,
+    "sha256": "766ccc1f306c885aa45542a9846bbd0a505b27a0374f146778171c2254ce18e3"
+  },
+  {
+    "file": "jetbrains-mono/OFL.txt",
+    "component": "JetBrains Mono",
+    "version": "2.304",
+    "url": "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/OFL.txt",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/JetBrains/JetBrainsMono/contents/OFL.txt?ref=v2.304",
+    "git_blob_sha": "8bee4148c1d54dbf5dae6d6c117fc80414266abb",
+    "bytes": 4399,
+    "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad"
+  },
+  {
+    "file": "rclone/COPYING",
+    "component": "rclone",
+    "version": "v1.75.0",
+    "url": "https://raw.githubusercontent.com/rclone/rclone/v1.75.0/COPYING",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/rclone/rclone/contents/COPYING?ref=v1.75.0",
+    "git_blob_sha": "8c27c67fd0a12a1e18db983f19450abed435e689",
+    "bytes": 1095,
+    "sha256": "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04"
+  },
+  {
+    "file": "tiktoken/LICENSE",
+    "component": "tiktoken reference (bundled version unknown)",
+    "version": "0.9.0 reference only",
+    "url": "https://raw.githubusercontent.com/openai/tiktoken/0.9.0/LICENSE",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/openai/tiktoken/contents/LICENSE?ref=0.9.0",
+    "git_blob_sha": "83ed1036f70d4f419307e8a044a35e163cc35201",
+    "bytes": 1078,
+    "sha256": "418cb499b436128d653d79941333a5437b7be2ea9213dcc2f04d15d5d2c51d86"
+  },
+  {
+    "file": "rootfs/openssl/LICENSE.txt",
+    "component": "openssl",
+    "version": "3.3.3",
+    "url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.3.3/LICENSE.txt",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/openssl/openssl/contents/LICENSE.txt?ref=openssl-3.3.3",
+    "git_blob_sha": "49cc83d2ee29d13453188217f0e4edd70c7f842f",
+    "bytes": 10175,
+    "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a"
+  },
+  {
+    "file": "rootfs/zlib/LICENSE",
+    "component": "zlib",
+    "version": "1.3.1",
+    "url": "https://raw.githubusercontent.com/madler/zlib/v1.3.1/LICENSE",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/madler/zlib/contents/LICENSE?ref=v1.3.1",
+    "git_blob_sha": "ab8ee6f71428c3e4646b12b64ad387cde33462e5",
+    "bytes": 1002,
+    "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243"
+  },
+  {
+    "file": "rootfs/musl/COPYRIGHT",
+    "component": "musl",
+    "version": "1.2.5",
+    "url": "https://git.musl-libc.org/cgit/musl/plain/COPYRIGHT?h=v1.2.5",
+    "resolved_url": "https://git.musl-libc.org/cgit/musl/plain/COPYRIGHT?h=v1.2.5",
+    "status": "ok",
+    "bytes": 6204,
+    "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+  },
+  {
+    "file": "rootfs/apk-tools/LICENSE",
+    "component": "apk-tools",
+    "version": "2.14.6",
+    "url": "https://gitlab.alpinelinux.org/alpine/apk-tools/-/raw/v2.14.6/LICENSE",
+    "resolved_url": "https://gitlab.alpinelinux.org/alpine/apk-tools/-/raw/v2.14.6/LICENSE",
+    "status": "ok",
+    "bytes": 17622,
+    "sha256": "b3c87315aae4c9f276c37168f2655dd8bd990544d7a0bbfb929664155c7ab257"
+  },
+  {
+    "file": "rootfs/pax-utils/COPYING",
+    "component": "pax-utils",
+    "version": "1.3.8",
+    "url": "https://raw.githubusercontent.com/gentoo/pax-utils/v1.3.8/COPYING",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/gentoo/pax-utils/contents/COPYING?ref=v1.3.8",
+    "git_blob_sha": "3912109b5cd65a68039d473c11c9f7ac2303e06d",
+    "bytes": 18011,
+    "sha256": "e6d6a009505e345fe949e1310334fcb0747f28dae2856759de102ab66b722cb4"
+  },
+  {
+    "file": "rootfs/aports/alpine-base-APKBUILD",
+    "component": "alpine-base Alpine recipe",
+    "version": "3.21.3-r0",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/899c70c801638ce9aea29a822aaa07a1488efa15/main/alpine-base/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/alpine-base/APKBUILD?ref=899c70c801638ce9aea29a822aaa07a1488efa15",
+    "git_blob_sha": "0868c9317703cc2aadf48146f1f6837d8839caf4",
+    "bytes": 1563,
+    "sha256": "704c02964a1f651d98370df102b2592b8f3f1c51a8a039139f87d474d17e551a"
+  },
+  {
+    "file": "rootfs/aports/alpine-baselayout-APKBUILD",
+    "component": "alpine-baselayout Alpine recipe",
+    "version": "3.6.8-r1",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/5f0cd7890349e7fe11128478ac506c709805224d/main/alpine-baselayout/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/alpine-baselayout/APKBUILD?ref=5f0cd7890349e7fe11128478ac506c709805224d",
+    "git_blob_sha": "4ed8730dbfd78d60bee5d05d53b04a1bf15986d3",
+    "bytes": 8179,
+    "sha256": "2f4dd6c70f9a877244e38cd337d8863ef62486878c5de940ab494339daaf9d34"
+  },
+  {
+    "file": "rootfs/aports/alpine-keys-APKBUILD",
+    "component": "alpine-keys Alpine recipe",
+    "version": "2.5-r0",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/6d473fb38effb2389f567b29fb7eb27039b3a279/main/alpine-keys/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/alpine-keys/APKBUILD?ref=6d473fb38effb2389f567b29fb7eb27039b3a279",
+    "git_blob_sha": "42acdc5d0e15bd83ae59b128ed584ccdb125cd09",
+    "bytes": 6036,
+    "sha256": "8b51c80bff0f2477f9be7bc9ff98aa760f5759dfcd3a5026ca518c20a89347c6"
+  },
+  {
+    "file": "rootfs/aports/apk-tools-APKBUILD",
+    "component": "apk-tools Alpine recipe",
+    "version": "2.14.6-r3",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/41847d6ccff08940b5bf1ba0d6005e95897039f9/main/apk-tools/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/apk-tools/APKBUILD?ref=41847d6ccff08940b5bf1ba0d6005e95897039f9",
+    "git_blob_sha": "7df233e5d369853481253177762eac9c949b37c2",
+    "bytes": 3683,
+    "sha256": "f5b991f93984953f8364f0a9baad3568bac608830e641623ab32e3edaae6f8bb"
+  },
+  {
+    "file": "rootfs/aports/busybox-APKBUILD",
+    "component": "busybox Alpine recipe",
+    "version": "1.37.0-r12",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/9c49608930ef6a9936750e9e39edec56b3db9cd5/main/busybox/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/busybox/APKBUILD?ref=9c49608930ef6a9936750e9e39edec56b3db9cd5",
+    "git_blob_sha": "2656c6609ac65cdf9c456051fd57d8db5eba308b",
+    "bytes": 22802,
+    "sha256": "68764ef686c153c377aaf8c2462344a23c12375510ec8e7f1bad68dcd2dbb513"
+  },
+  {
+    "file": "rootfs/aports/ca-certificates-APKBUILD",
+    "component": "ca-certificates Alpine recipe",
+    "version": "20241121-r1",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/707ff77afebd8ef5bd60f3a5dd1b08f8c480f531/main/ca-certificates/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/ca-certificates/APKBUILD?ref=707ff77afebd8ef5bd60f3a5dd1b08f8c480f531",
+    "git_blob_sha": "cad4b9d251bc5ead0e4493b8954f1e75ee92a68a",
+    "bytes": 2779,
+    "sha256": "b890d659ae576a7b462df83f501117ffe06e6a35e104adda958d3d2ee589de9c"
+  },
+  {
+    "file": "rootfs/aports/musl-APKBUILD",
+    "component": "musl Alpine recipe",
+    "version": "1.2.5-r9",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/efd4d5df7be0ea48d98512671f676fc5ceb14899/main/musl/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/musl/APKBUILD?ref=efd4d5df7be0ea48d98512671f676fc5ceb14899",
+    "git_blob_sha": "8c376ed07168827e127e51a86cd08d9b1f17fd47",
+    "bytes": 6648,
+    "sha256": "5c31b8e5c25bcc4fe51e913dce8e057bebaf9c8980b88f76bc19d05d67a906ba"
+  },
+  {
+    "file": "rootfs/aports/openssl-APKBUILD",
+    "component": "openssl Alpine recipe",
+    "version": "3.3.3-r0",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/ddbf4a43b534e1e2da4ccb72bdc4ffcd9b85ce03/main/openssl/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/openssl/APKBUILD?ref=ddbf4a43b534e1e2da4ccb72bdc4ffcd9b85ce03",
+    "git_blob_sha": "3f489a08ec07b076273a8249591eda3eacebfc8f",
+    "bytes": 5614,
+    "sha256": "0046db804687b568d1f3ff62542108d61a74c1dc143e37e389364b0246c040a3"
+  },
+  {
+    "file": "rootfs/aports/pax-utils-APKBUILD",
+    "component": "pax-utils Alpine recipe",
+    "version": "1.3.8-r1",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/398a5aee3025ec8a4d0d761e448dc86ac777fa09/main/pax-utils/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/pax-utils/APKBUILD?ref=398a5aee3025ec8a4d0d761e448dc86ac777fa09",
+    "git_blob_sha": "76483d72aa80cebe8b31eb031e13ec1bcb748ab6",
+    "bytes": 1573,
+    "sha256": "94093b0c82b24c09bd3a5c307273cbee8f6ceaee49b66f75e574a2441a409862"
+  },
+  {
+    "file": "rootfs/aports/zlib-APKBUILD",
+    "component": "zlib Alpine recipe",
+    "version": "1.3.1-r2",
+    "url": "https://raw.githubusercontent.com/alpinelinux/aports/4c2722e7ecc1c5e3ba882429044a101497121223/main/zlib/APKBUILD",
+    "status": "ok",
+    "retrieval_url": "https://api.github.com/repos/alpinelinux/aports/contents/main/zlib/APKBUILD?ref=4c2722e7ecc1c5e3ba882429044a101497121223",
+    "git_blob_sha": "1568356d1bfd174c79bc446fb03cdc086bc0462e",
+    "bytes": 821,
+    "sha256": "47ba2fb65734f65fbbfc980d261cf86ab99e8c5bad9d0977a59620cde18ffd53"
+  },
+  {
+    "file": "katex/fonts-upstream-LICENSE",
+    "component": "KaTeX font upstream; revision mapping unverified",
+    "url": "https://api.github.com/repos/KaTeX/katex-fonts/contents/LICENSE",
+    "version": "see component",
+    "git_blob_sha": "37e0aef7e44ca128122878d73da95fb6f4a481ee",
+    "resolved_url": "https://github.com/KaTeX/katex-fonts/blob/master/LICENSE",
+    "status": "ok",
+    "bytes": 1079,
+    "sha256": "a7bd44abd8419bf78185be51f34216356af1adb0806ce39d6a9ca0940bd49b70"
+  },
+  {
+    "file": "katex/mhchem-source.js",
+    "component": "KaTeX mhchem copyright headers v0.16.21",
+    "url": "https://api.github.com/repos/KaTeX/KaTeX/contents/contrib/mhchem/mhchem.js?ref=v0.16.21",
+    "version": "see component",
+    "git_blob_sha": "a2a6dde3bd6e8dc3982d773a7191a48680efd74d",
+    "resolved_url": "https://github.com/KaTeX/KaTeX/blob/v0.16.21/contrib/mhchem/mhchem.js",
+    "status": "ok",
+    "bytes": 67692,
+    "sha256": "2e59e02033d60c110e5ba70a42f9259c8597bb19dbd03c542e2e5860394376fd"
+  },
+  {
+    "file": "rootfs/musl/getent.c",
+    "component": "musl-utils Alpine getent BSD header",
+    "url": "https://api.github.com/repos/alpinelinux/aports/contents/main/musl/getent.c?ref=efd4d5df7be0ea48d98512671f676fc5ceb14899",
+    "version": "see component",
+    "git_blob_sha": "c2ed4c6cf9589b9a2a5dde7a5beaf3dc61de2db1",
+    "resolved_url": "https://github.com/alpinelinux/aports/blob/efd4d5df7be0ea48d98512671f676fc5ceb14899/main/musl/getent.c",
+    "status": "ok",
+    "bytes": 11656,
+    "sha256": "b25f32d306d542246e9358ef65cd67c12b3e3a77656bc467853d3b0c76b5fbbd"
+  }
+]

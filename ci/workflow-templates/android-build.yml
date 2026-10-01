@@ -1,0 +1,87 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: Run performance, recovery, pricing, backup and status-card regressions
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'perf120-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CI_SIGNED: 'false'
+      CI_RUN_TESTS: ${{ github.event_name == 'push' || inputs.run_tests }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          submodules: false
+
+      - name: Restore source snapshot when using the web-upload bundle
+        run: python3 scripts/ci/restore_source.py
+
+      - name: Set up Java 17 and Gradle cache
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+          cache-dependency-path: |
+            src/android/**/*.gradle.kts
+            src/android/gradle.properties
+            src/android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
+
+      - name: Restore native resources and local SDK path
+        run: |
+          python3 scripts/ci/prepare_android.py
+          chmod +x src/android/gradlew
+
+      - name: Build and verify APK
+        timeout-minutes: 65
+        run: bash scripts/ci/build_android.sh
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: MinisApp-performance120-${{ github.run_number }}
+          path: ci-output/*.apk
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+      - name: Upload build logs and test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-build-logs-${{ github.run_number }}
+          path: |
+            ci-output/*.log
+            ci-output/*.txt
+            src/android/app/build/reports/tests/testReleaseUnitTest/
+            src/android/app/build/test-results/testReleaseUnitTest/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Remove private signing files
+        if: always()
+        run: rm -rf src/android/signing

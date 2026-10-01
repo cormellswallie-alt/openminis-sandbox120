@@ -1,0 +1,17 @@
+{
+  "version": "1.14.6-sandbox120",
+  "versionCode": 34,
+  "applicationId": "com.openminis.perf120",
+  "cloud_run": 36861600459,
+  "cloud_commit": "da68c6b1196db191a1283a9d904dd26d053a91ef",
+  "release_apk": "releases/MinisApp-1.14.6-sandbox120-coexist-arm64-v8a.apk",
+  "bytes": 42251270,
+  "sha256": "796bd1769e7f73f77c02f2ee1aab8841122528cc4e48ca30e24b9f13dc4432da",
+  "signerSHA256": "af29344161194d6b1e4c1785766c4a2dd74d04c2128acdd9c664a5e9001990e4",
+  "testClasses": 109,
+  "tests": 897,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "device_validation": false
+}

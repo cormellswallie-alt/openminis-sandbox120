@@ -1,0 +1,50 @@
+[
+  {
+    "file": "katex/fonts-LICENSE",
+    "component": "KaTeX fonts",
+    "version": "0.16.21",
+    "url": "https://raw.githubusercontent.com/KaTeX/KaTeX/v0.16.21/fonts/LICENSE",
+    "status": "missing",
+    "error": "curl: (22) The requested URL returned error: 404"
+  },
+  {
+    "file": "rootfs/busybox/LICENSE",
+    "component": "busybox",
+    "version": "1.37.0",
+    "url": "https://git.busybox.net/busybox/plain/LICENSE?h=1_37_0",
+    "status": "missing",
+    "error": "curl: (22) The requested URL returned error: 404"
+  },
+  {
+    "file": "rootfs/busybox/LICENSE",
+    "component": "BusyBox 1.37.0",
+    "url": "https://git.busybox.net/busybox/plain/LICENSE?h=1_37_0",
+    "version": "see component",
+    "status": "missing",
+    "error": "curl: (22) The requested URL returned error: 404"
+  },
+  {
+    "file": "rootfs/busybox/LICENSE.tag",
+    "component": "BusyBox 1.37.0 tag alternative",
+    "url": "https://git.busybox.net/busybox/plain/LICENSE?h=1_37_0& id=1_37_0",
+    "version": "see component",
+    "status": "missing",
+    "error": "curl: (3) URL rejected: Malformed input to a URL function"
+  },
+  {
+    "file": "rootfs/ca-certificates/COPYING",
+    "component": "ca-certificates 20241121",
+    "url": "https://gitlab.alpinelinux.org/alpine/ca-certificates/-/raw/20241121/COPYING",
+    "version": "see component",
+    "status": "missing",
+    "error": "curl: (22) The requested URL returned error: 404"
+  },
+  {
+    "file": "rootfs/ca-certificates/LICENSE",
+    "component": "ca-certificates 20241121",
+    "url": "https://gitlab.alpinelinux.org/alpine/ca-certificates/-/raw/20241121/LICENSE",
+    "version": "see component",
+    "status": "missing",
+    "error": "curl: (22) The requested URL returned error: 404"
+  }
+]

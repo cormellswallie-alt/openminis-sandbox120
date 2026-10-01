@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="token_price_title">模型 Token 單價</string>
+    <string name="token_price_input">輸入</string>
+    <string name="token_price_output">輸出</string>
+    <string name="token_price_cache_read">快取讀取</string>
+    <string name="token_price_cache_write">快取寫入</string>
+    <string name="token_price_unknown">未知</string>
+    <string name="token_price_editor_footer">留空繼承 models.dev 預設單價。單位：USD/百萬 Tokens。快取輸入與未快取輸入分別計費。</string>
+    <string name="token_price_invalid">請輸入非負有限數。</string>
+    <string name="token_price_reset">恢復預設單價</string>
+    <string name="token_price_list_footer">單位：USD/百萬 Tokens。點擊模型可編輯輸入、輸出和快取單價。</string>
+    <string name="token_price_no_models">尚未設定模型</string>
+    <string name="token_cost_estimate">估算消費</string>
+    <string name="token_cost_footer">依目前單價估算，並非歷史帳單。舊資料的模型歸屬可能為估計；缺失價格時總消費顯示未知。</string>
+    <string name="token_cost_partial">已知 %1$s · 總消費未知</string>
+</resources>

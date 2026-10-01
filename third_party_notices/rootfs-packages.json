@@ -1,0 +1,122 @@
+[
+  {
+    "name": "alpine-baselayout",
+    "version": "3.6.8-r1",
+    "origin": "alpine-baselayout",
+    "license": "GPL-2.0-only",
+    "url": "https://git.alpinelinux.org/cgit/aports/tree/main/alpine-baselayout",
+    "commit": "5f0cd7890349e7fe11128478ac506c709805224d"
+  },
+  {
+    "name": "alpine-baselayout-data",
+    "version": "3.6.8-r1",
+    "origin": "alpine-baselayout",
+    "license": "GPL-2.0-only",
+    "url": "https://git.alpinelinux.org/cgit/aports/tree/main/alpine-baselayout",
+    "commit": "5f0cd7890349e7fe11128478ac506c709805224d"
+  },
+  {
+    "name": "alpine-keys",
+    "version": "2.5-r0",
+    "origin": "alpine-keys",
+    "license": "MIT",
+    "url": "https://alpinelinux.org",
+    "commit": "6d473fb38effb2389f567b29fb7eb27039b3a279"
+  },
+  {
+    "name": "alpine-release",
+    "version": "3.21.3-r0",
+    "origin": "alpine-base",
+    "license": "MIT",
+    "url": "https://alpinelinux.org",
+    "commit": "899c70c801638ce9aea29a822aaa07a1488efa15"
+  },
+  {
+    "name": "apk-tools",
+    "version": "2.14.6-r3",
+    "origin": "apk-tools",
+    "license": "GPL-2.0-only",
+    "url": "https://gitlab.alpinelinux.org/alpine/apk-tools",
+    "commit": "41847d6ccff08940b5bf1ba0d6005e95897039f9"
+  },
+  {
+    "name": "busybox",
+    "version": "1.37.0-r12",
+    "origin": "busybox",
+    "license": "GPL-2.0-only",
+    "url": "https://busybox.net/",
+    "commit": "9c49608930ef6a9936750e9e39edec56b3db9cd5"
+  },
+  {
+    "name": "busybox-binsh",
+    "version": "1.37.0-r12",
+    "origin": "busybox",
+    "license": "GPL-2.0-only",
+    "url": "https://busybox.net/",
+    "commit": "9c49608930ef6a9936750e9e39edec56b3db9cd5"
+  },
+  {
+    "name": "ca-certificates-bundle",
+    "version": "20241121-r1",
+    "origin": "ca-certificates",
+    "license": "MPL-2.0 AND MIT",
+    "url": "https://www.mozilla.org/en-US/about/governance/policies/security-group/certs/",
+    "commit": "707ff77afebd8ef5bd60f3a5dd1b08f8c480f531"
+  },
+  {
+    "name": "libcrypto3",
+    "version": "3.3.3-r0",
+    "origin": "openssl",
+    "license": "Apache-2.0",
+    "url": "https://www.openssl.org/",
+    "commit": "ddbf4a43b534e1e2da4ccb72bdc4ffcd9b85ce03"
+  },
+  {
+    "name": "libssl3",
+    "version": "3.3.3-r0",
+    "origin": "openssl",
+    "license": "Apache-2.0",
+    "url": "https://www.openssl.org/",
+    "commit": "ddbf4a43b534e1e2da4ccb72bdc4ffcd9b85ce03"
+  },
+  {
+    "name": "musl",
+    "version": "1.2.5-r9",
+    "origin": "musl",
+    "license": "MIT",
+    "url": "https://musl.libc.org/",
+    "commit": "efd4d5df7be0ea48d98512671f676fc5ceb14899"
+  },
+  {
+    "name": "musl-utils",
+    "version": "1.2.5-r9",
+    "origin": "musl",
+    "license": "MIT AND BSD-2-Clause AND GPL-2.0-or-later",
+    "url": "https://musl.libc.org/",
+    "commit": "efd4d5df7be0ea48d98512671f676fc5ceb14899"
+  },
+  {
+    "name": "scanelf",
+    "version": "1.3.8-r1",
+    "origin": "pax-utils",
+    "license": "GPL-2.0-only",
+    "url": "https://wiki.gentoo.org/wiki/Hardened/PaX_Utilities",
+    "commit": "398a5aee3025ec8a4d0d761e448dc86ac777fa09"
+  },
+  {
+    "name": "ssl_client",
+    "version": "1.37.0-r12",
+    "origin": "busybox",
+    "license": "GPL-2.0-only",
+    "url": "https://busybox.net/",
+    "commit": "9c49608930ef6a9936750e9e39edec56b3db9cd5"
+  },
+  {
+    "name": "zlib",
+    "version": "1.3.1-r2",
+    "origin": "zlib",
+    "license": "Zlib",
+    "url": "https://zlib.net/",
+    "commit": "4c2722e7ecc1c5e3ba882429044a101497121223"
+  }
+]
