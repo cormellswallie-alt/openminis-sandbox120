@@ -54,8 +54,12 @@ class AnsiParser {
     private var utf8Len = 0
     private var utf8Remaining = 0
 
-    fun feed(bytes: ByteArray, len: Int, action: (ParsedAction) -> Unit) {
-        for (i in 0 until len.coerceIn(0, bytes.size)) processByte(bytes[i].toInt() and 0xFF, action)
+    fun feed(bytes: ByteArray, len: Int, action: (ParsedAction) -> Unit) =
+        feed(bytes, 0, len.coerceIn(0, bytes.size), action)
+
+    fun feed(bytes: ByteArray, offset: Int, length: Int, action: (ParsedAction) -> Unit) {
+        require(offset >= 0 && length >= 0 && offset <= bytes.size - length)
+        for (i in offset until offset + length) processByte(bytes[i].toInt() and 0xFF, action)
     }
 
     fun reset() {

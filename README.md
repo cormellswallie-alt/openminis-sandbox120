@@ -1,30 +1,33 @@
 # OpenMinis Sandbox 120
 
-基于 [OpenMinis/OpenMinis](https://github.com/OpenMinis/OpenMinis) 的个人 Android 定制版，保留多模型聊天、工具调用、Linux 沙盒、终端、子代理和备份能力。此仓库发布 `1.14.6-sandbox120` 的源码与安装包，不是上游官方发行版。
+基于 [OpenMinis/OpenMinis](https://github.com/OpenMinis/OpenMinis) 的个人 Android 定制版，保留多模型聊天、工具调用、Linux 沙盒、终端、子代理和备份能力。此仓库发布 `1.14.7-shellspeed120` 的源码与安装包，不是上游官方发行版。
 
 ## 安装
 
-在本仓库 [Releases](https://github.com/cormellswallie-alt/openminis-sandbox120/releases) 下载 `MinisApp-1.14.6-sandbox120-coexist-arm64-v8a.apk`。设备需为 ARM64，Android 8.0 / API 26 或更高。
+在本仓库 [Releases](https://github.com/cormellswallie-alt/openminis-sandbox120/releases) 下载 `MinisApp-1.14.7-shellspeed120-coexist-arm64-v8a.apk`。设备需为 ARM64，Android 8.0 / API 26 或更高。
 
-- 版本：`1.14.6-sandbox120`，versionCode `34`
+- 版本：`1.14.7-shellspeed120`，versionCode `35`
 - 包名：`com.openminis.perf120`
-- APK 大小：42,251,270 字节
-- APK SHA-256：`796bd1769e7f73f77c02f2ee1aab8841122528cc4e48ca30e24b9f13dc4432da`
+- APK 大小：42,263,118 字节
+- APK SHA-256：`abab95e33f71078e04b35c6a24d9678c67f005abf394a3699403a751846a9ead`
 - 签名证书 SHA-256：`af29344161194d6b1e4c1785766c4a2dd74d04c2128acdd9c664a5e9001990e4`
 
 该安装包沿用此前 `perf120` 共存版的专用签名，可覆盖同包名、同签名的旧版。与官方版及旧 `com.openminis.s14` 的数据目录独立；迁移数据请使用应用的备份/导入功能。源码自行构建的临时签名包不能覆盖本发行 APK。
 
 ## 本版改动
 
-- 页面退出、暂停、切换会话或宿主脱离时清理复制选择菜单和手柄，阻止旧页面的迟到显示回调。
-- 终端直接设置初始工作目录，移除读取路径上的固定 300ms 等待及自动 `cd/clear` 输入。
-- 沙盒命令释放进程预算后立即唤醒等待队列，保留周期检查、取消、超时和预算保护。
-- 大输出直接处理字符数组，减少临时字符串复制；复用不可变的终端 ASCII 解析事件。
-- 修复沙盒 Git 的 `core.createObject=copy` 错误，初始化时幂等迁移配置，减少 shell 启动时的重复写入。
+- shell 工具以解码分块更新输出，无换行文本也能显示；最近 50 行/16 Ki 字符的预览按 50ms 合并，完整最终结果仍走原路径。
+- 工具预览独立于模型长文本节流，避免二次等待；预览跟随执行任务取消并验证目标状态，防止停止后复活。
+- 订阅实时输出的 Python 工具命令默认无缓冲，保留用户环境及 CLI 覆盖。终端保持正常 TTY 缓冲，避免大量小 print 的吞吐退步。
+- 退出状态目录由后台维护线程低频清理，保护活跃命令与目录代次，避免短命令等待完整扫描。
+- 终端复用不可变 ASCII cell、避免同尺寸备用屏重建，分片输入零复制，并按软时间预算让出主线程。
+- 并发工具状态事务统一处理；用户终端环境不再污染全局沙盒默认值。
 
-此前已实现任务恢复、网络请求重试、Token 单价与消费估算、压缩撤销/恢复、状态卡片过渡和最高 120 Hz 的前台刷新率请求。
+此前的复制选择浮窗退出清理、终端去固定启动等待、预算释放唤醒、Git 配置修复、任务恢复、Token 计价和压缩撤销等功能保留。
 
-云端 Release 编译和专项回归通过：**109 个测试类、897 项测试，0 失败、0 错误、0 跳过**。下载后已核对 APK 完整性、签名、版本、ARM64 和 Baseline Profile。验证摘要见 [docs/release-1.14.6.json](docs/release-1.14.6.json)。这是专项测试集合，尚未完成本版真机交互验收；最高 120 Hz 请求不代表稳定 120 FPS，局部性能基准不代表下载带宽或纯计算吞吐的整体提升。
+云端 Release 编译和专项回归通过：**114 个测试类、939 项测试，0 失败、0 错误、0 跳过**。下载后已核对 APK 完整性、签名、版本、ARM64 和 Baseline Profile。验证摘要见 [docs/release-1.14.7.json](docs/release-1.14.7.json)。
+
+本版尚未完成真机端到端交互验收。输出处理的局部基准显示收益，但不能据此承诺 Python 纯计算、下载带宽或所有命令整体加速。共享 Python 字节码缓存与持久解释器未启用；公开基准位于 `scripts/benchmarks`。
 
 ## 构建
 

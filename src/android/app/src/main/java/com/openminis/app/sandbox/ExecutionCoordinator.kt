@@ -67,10 +67,14 @@ object ExecutionCoordinator {
         timeout: Long,
         lineCallback: ((String) -> Unit)?,
         fsSessionId: String?,
+        outputCallback: ((String) -> Unit)?,
     ): CommandResult {
         val startTime = System.currentTimeMillis()
         val bindMounts = buildSessionBindMounts(fsSessionId ?: sessionId)
-        val envVars = envVarRepository?.allAsDict() ?: emptyMap()
+        val envVars = toolEnvironment(
+            envVarRepository?.allAsDict() ?: emptyMap(),
+            streaming = lineCallback != null || outputCallback != null,
+        )
 
         suspend fun attempt(noSeccomp: Boolean): Pair<String, Int> {
             val shell = FreshProcessShell(
@@ -98,6 +102,7 @@ object ExecutionCoordinator {
                     timeout = timeout,
                     envVars = envVars,
                     lineCallback = lineCallback,
+                    outputCallback = outputCallback,
                 )
             } finally {
                 freshShells.computeIfPresent(sessionId) { _, set ->
@@ -144,6 +149,10 @@ object ExecutionCoordinator {
         }
         return CommandResult(output = output, exitCode = exitCode, durationMs = durationMs)
     }
+
+    /** Per-command defaults never leak into the terminal or the global environment. */
+    private fun toolEnvironment(userValues: Map<String, String>, streaming: Boolean): Map<String, String> =
+        PythonRuntimePolicy.forCommand(PRootKernel.customEnvironment, userValues, streaming)
 
     private lateinit var appContext: Context
     var envVarRepository: EnvVarRepository? = null
@@ -226,6 +235,8 @@ object ExecutionCoordinator {
          *  binds (a helper's PARENT). The shell process itself stays keyed by
          *  [sessionId], so stop / cleanup never reach the parent's shell. */
         fsSessionId: String? = null,
+        /** Raw decoded output chunks, including text without a trailing newline. */
+        outputCallback: ((String) -> Unit)? = null,
     ): CommandResult {
         // [T-android-concurrent-shell] Pick a FREE shell from this session's
         // pool instead of queueing behind its one shell.
@@ -304,9 +315,9 @@ object ExecutionCoordinator {
             isStartFailure = ::isStartFailure,
         ) {
             if (executionStrategy == ShellExecutionStrategy.FRESH_PROCESS) {
-                executeFresh(sessionId, command, timeout, lineCallback, fsSessionId)
+                executeFresh(sessionId, command, timeout, lineCallback, fsSessionId, outputCallback)
             } else {
-                executeWarm(sessionId, command, timeout, lineCallback, fsSessionId)
+                executeWarm(sessionId, command, timeout, lineCallback, fsSessionId, outputCallback)
             }
         }
         return when (outcome) {
@@ -352,6 +363,7 @@ object ExecutionCoordinator {
         timeout: Long,
         lineCallback: ((String) -> Unit)?,
         fsSessionId: String?,
+        outputCallback: ((String) -> Unit)?,
     ): CommandResult {
         val lease = acquireShellLease(sessionId, fsSessionId ?: sessionId)
 
@@ -380,7 +392,10 @@ object ExecutionCoordinator {
             // command. Before that, a cold-start shell death between here and
             // executeCommand silently dropped the whole environment and the
             // user's first tool call ran bare.
-            val envVars = envVarRepository?.allAsDict() ?: emptyMap()
+            val envVars = toolEnvironment(
+                envVarRepository?.allAsDict() ?: emptyMap(),
+                streaming = lineCallback != null || outputCallback != null,
+            )
             val previousKeys = lastInjectedKeys[lease.key] ?: emptySet()
             if (envVars.isNotEmpty() || previousKeys.isNotEmpty()) {
                 shell.applyEnvironment(envVars, previousKeys = previousKeys)
@@ -391,6 +406,7 @@ object ExecutionCoordinator {
                 command = command,
                 timeout = timeout,
                 lineCallback = lineCallback,
+                outputCallback = outputCallback,
             )
 
             val durationMs = System.currentTimeMillis() - startTime

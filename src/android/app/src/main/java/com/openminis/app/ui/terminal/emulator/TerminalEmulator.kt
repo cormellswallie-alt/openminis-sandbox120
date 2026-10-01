@@ -61,8 +61,12 @@ class TerminalEmulator(cols: Int = 80, rows: Int = 24) {
         private set
 
     /** Feed raw bytes from the PTY. */
-    fun feed(bytes: ByteArray, len: Int = bytes.size) {
-        parser.feed(bytes, len) { handleAction(it) }
+    fun feed(bytes: ByteArray, len: Int = bytes.size) =
+        feed(bytes, 0, len.coerceIn(0, bytes.size))
+
+    /** Consume a synchronous slice without copying or retaining the caller's array. */
+    fun feed(bytes: ByteArray, offset: Int, length: Int) {
+        parser.feed(bytes, offset, length) { handleAction(it) }
         _version.value = _version.value + 1
     }
 

@@ -99,6 +99,7 @@ class PersistentShell(
         val marker: String,
         val output: StringBuilder = StringBuilder(),
         val lineCallback: ((String) -> Unit)?,
+        val outputCallback: ((String) -> Unit)?,
         var onComplete: ((String, Int) -> Unit)? = null,
         /**
          * [T-android-shell-timeout-pgid] Process group of this command's
@@ -108,7 +109,9 @@ class PersistentShell(
          * kill", never "kill something else".
          */
         @Volatile var pgid: Int? = null,
-    )
+    ) {
+        val callbacks = PersistentOutputCallbacks(output, outputCallback, lineCallback)
+    }
 
     /**
      * Ensure the persistent shell process is running.
@@ -445,10 +448,7 @@ class PersistentShell(
                         // been handed to the caller.
                         val beforeMarker = scan.substring(alreadyEmitted.coerceAtMost(markerIdx), markerIdx)
                         val visible = stripControlMarkers(beforeMarker, cb.marker)
-                        cb.output.append(visible)
-                        if (cb.lineCallback != null) {
-                            feedLines(visible, cb.lineCallback)
-                        }
+                        cb.callbacks.emit(visible)
 
                         // Extract exit code from marker line
                         val afterMarker = scan.substring(markerIdx)
@@ -465,10 +465,7 @@ class PersistentShell(
                         carryOver = scan.substring(emitEnd)
                         if (fresh.isNotEmpty()) {
                             val visible = stripControlMarkers(fresh, cb.marker)
-                            cb.output.append(visible)
-                            if (cb.lineCallback != null) {
-                                feedLines(visible, cb.lineCallback)
-                            }
+                            cb.callbacks.emit(visible)
                         }
                     }
                 } else {
@@ -507,19 +504,6 @@ class PersistentShell(
         Log.i(TAG, "Persistent shell process exited")
     }
 
-    private fun feedLines(text: String, callback: (String) -> Unit) {
-        val lines = text.split('\n')
-        for (i in lines.indices) {
-            val line = lines[i].replace("\r", "")
-            if (line.isNotEmpty() && (i < lines.size - 1 || text.endsWith('\n'))) {
-                callback(line)
-            } else if (line.isNotEmpty() && i == lines.size - 1) {
-                // Partial line — still feed it for real-time updates
-                callback(line)
-            }
-        }
-    }
-
     private fun parseExitCode(text: String, marker: String): Int {
         // Pattern: __MINIS_DONE_{marker}_EXIT_{code}__
         val regex = Regex("__MINIS_DONE_${Regex.escape(marker)}_EXIT_(\\d+)__")
@@ -539,6 +523,7 @@ class PersistentShell(
         command: String,
         timeout: Long = 600_000L,
         lineCallback: ((String) -> Unit)? = null,
+        outputCallback: ((String) -> Unit)? = null,
     ): Pair<String, Int> {
         ensureStarted()
 
@@ -573,6 +558,7 @@ class PersistentShell(
                     val cb = CommandCallback(
                         marker = marker,
                         lineCallback = lineCallback,
+                        outputCallback = outputCallback,
                     )
                     cb.onComplete = { output, exitCode ->
                         if (cont.isActive) {

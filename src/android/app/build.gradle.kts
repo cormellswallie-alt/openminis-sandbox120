@@ -39,8 +39,8 @@ android {
         applicationId = "com.openminis.perf120"
         minSdk = 26
         targetSdk = 35
-        versionCode = 34
-        versionName = "1.14.6-sandbox120"
+        versionCode = 35
+        versionName = "1.14.7-shellspeed120"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

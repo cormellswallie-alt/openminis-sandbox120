@@ -1,0 +1,27 @@
+Local desktop JVM full feed -> parser -> buffer benchmark
+Runner: run-terminal-feed-benchmark.sh (no network, no Gradle build)
+Baseline: exact pre-task working-tree emulator sources saved to /tmp/terminal-speed-baseline.
+Compare: TERMINAL_SOURCE_DIR=/tmp/terminal-speed-baseline sh scripts/benchmarks/run-terminal-feed-benchmark.sh
+Current: sh scripts/benchmarks/run-terminal-feed-benchmark.sh
+Each workload: 80x24 terminal, 20000 records, 4096-byte chunks, 8 warmups, median of 9 runs.
+Allocation uses desktop ThreadMXBean exclusively in scripts/benchmarks.
+Compose State/Color and URL broker are temporary desktop stubs, not actual Android rendering.
+
+Paired baseline/current run (ms; allocated bytes):
+plain     40.966 / 30.917    53555864 / 7956696
+ansi      35.214 / 36.366    37875920 / 25076752
+unicode   30.331 / 29.402    38592560 / 23393392
+alternate 351.268 / 200.756  356093456 / 171774288
+Final current rerun: plain 28.225, ansi 34.618, unicode 24.275, alternate 169.625 ms.
+Do not claim consistent ANSI/Unicode throughput improvement: JVM timing varied across runs.
+
+Baseline and current: seed 90210, 3000 operations, digest -1974883737115895004,
+response hash 41736759, URL callback hash -1257087479; all workload checksums match.
+Final JUnit: 14 tests passed; includes fixed expectations and seed 117 whole/chunked full-state differential.
+
+UI scheduling: Main-thread ordered processing, <=4096 bytes per synchronous feed;
+4ms elapsed budget spans emissions, then delay(1) to let Main service queued work.
+Soft budget only; a single slice, GC, rendering and PTY callback cost can exceed it.
+No actual Android frame-latency or end-to-end PTY benchmark was run.
+History row arrays remain allocated and are never recycled, to preserve borrowed rows.
+Baseline /tmp snapshot is session-local; archive it separately for comparisons after this session.

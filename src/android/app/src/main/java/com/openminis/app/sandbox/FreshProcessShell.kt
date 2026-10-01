@@ -57,195 +57,199 @@ internal class FreshProcessShell(
         timeout: Long,
         envVars: Map<String, String> = emptyMap(),
         lineCallback: ((String) -> Unit)? = null,
+        outputCallback: ((String) -> Unit)? = null,
     ): Pair<String, Int> = withContext(Dispatchers.IO) {
         // [T-android-fresh-exit-status-file] Where the runner reports the
         // command's exit (see ForegroundCommandGroup.wrapForFreshProcess).
         // The rootfs is the guest's "/", so the same file is visible on both
         // sides without a bind mount.
         val exitDir = File(RootfsManager.getInstance(context).rootfsDir, EXIT_DIR_NAME)
-        runCatching { exitDir.mkdirs(); pruneStaleExitFiles(exitDir) }
         val token = java.util.UUID.randomUUID().toString()
         val statusFile = File(exitDir, token)
-        statusHandle = statusFile
-        val process = try {
-            spawn(command, envVars, "/$EXIT_DIR_NAME/$token")
-        } catch (e: Exception) {
-            Log.e(TAG, "[$sessionId] spawn failed: ${e.message}")
-            return@withContext Pair("$SPAWN_FAILED_PREFIX ${e.message}]", -1)
-        }
-        // [T-android-shell-fresh-process] Step 5. Publish the process so
-        // [stop] can reach it. The warm path's Stop button works by killing
-        // the session's long-lived shell; a fresh process is owned by this
-        // call frame and would otherwise be unreachable, so tapping Stop
-        // would leave the command running with no way to cancel it.
-        live = process
-        if (stopped) {
-            // Stop arrived between the check and the spawn. Honour it rather
-            // than running a command the user already cancelled.
-            runCatching { process.destroyForcibly() }
-            live = null
-            return@withContext Pair("[Cancelled]", CANCELLED_EXIT)
-        }
-
-        val output = StringBuilder()
-
-        // [T-android-fresh-stderr-drain] Debug builds keep stderr on its own
-        // pipe (see spawn); it MUST be read, or a command that writes 64 KB to
-        // stderr blocks forever. Release merges stderr and needs no drain.
-        val stderrDrain = if (SEPARATE_STDERR) {
-            StderrDrain(process.errorStream) { Log.d("PRootStderr", it) }.start()
-        } else {
-            null
-        }
-
-        // The read below is a BLOCKING InputStream.read(). Coroutine
-        // cancellation cannot interrupt it — withTimeoutOrNull would fire its
-        // timer and then wait for the read anyway, so the timeout would not
-        // take effect until the command finished on its own (measured: a 5s
-        // timeout on `sleep 120` did not return). The only thing that unblocks
-        // a pipe read is the writer going away, so the watchdog kills the
-        // process and lets EOF end the loop naturally.
-        val timedOut = java.util.concurrent.atomic.AtomicBoolean(false)
-        val readEof = java.util.concurrent.atomic.AtomicBoolean(false)
-        val watchdog = kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
-            kotlinx.coroutines.delay(timeout)
-            // [T-android-mcp-detached-daemon-hang] Do NOT gate this on
-            // `process.isAlive`.
-            //
-            // A command may leave behind a deliberately detached daemon:
-            // `minis-mcp-cli` forks one (setsid + its own session, fds 0/1/2
-            // reopened on /dev/null) so later calls reuse warm MCP
-            // connections. The daemon holds no pipe of its own — verified on
-            // device — but proot stays ptrace-attached to it, and a tracer
-            // cannot exit while its tracee lives. So proot remains alive
-            // holding the host pipe's write end long after the command
-            // printed its result and exited, and the blocking read below never
-            // sees EOF.
-            //
-            // Measured on a Pixel 6 / Android 17: `minis-mcp-cli list` wrote
-            // its complete output, yet the shell call was still running after
-            // 90s under a 30s guest `timeout`, with proot showing
-            // `TracerPid` = the surviving daemon.
-            //
-            // `process.isAlive` is TRUE in that state, so the old gate did let
-            // this path run — but it is also the case that a dead process
-            // still needs the stream closed, and closing is harmless either
-            // way. Run the unblock path unconditionally once the deadline
-            // passes rather than depending on which of the two shapes occurred.
-            //
-            // [T-android-fresh-exit-status-file] That completed command is now
-            // finished by the completion monitor below, not by this deadline;
-            // the watchdog only bounds a command that is genuinely still running.
-            run {
-                timedOut.set(true)
-                // [T-android-fresh-exit-status-file] Kill the command's own
-                // process group, not proot: proot may also be the tracer of a
-                // daemon an earlier command detached, and killing it would
-                // leave that daemon running untraced and broken. See
-                // [killCommand].
-                killCommand(process, readEof)
-                Log.i(TAG, "[$sessionId] timeout after ${timeout / 1000}s, command killed")
+        val registration = FreshExitDirectoryPolicy.shared.register(exitDir, token)
+        try {
+            statusHandle = statusFile
+            val process = try {
+                spawn(command, envVars, "/$EXIT_DIR_NAME/$token")
+            } catch (e: Exception) {
+                Log.e(TAG, "[$sessionId] spawn failed: ${e.message}")
+                return@withContext Pair("$SPAWN_FAILED_PREFIX ${e.message}]", -1)
             }
-        }
-
-        // [T-android-fresh-exit-status-file] Completion monitor. The runner
-        // writes the status file once the command has exited; from then on
-        // everything the command wrote is already in the pipe. If proot then
-        // exits too, the read reaches EOF by itself and this does nothing. If
-        // proot stays — it is still tracing a detached daemon, and its own
-        // stdout IS this pipe — EOF never comes, so once the output has gone
-        // quiet the read end is closed here and the call completes, leaving
-        // proot (and the daemon) alone.
-        val lastReadAt = java.util.concurrent.atomic.AtomicLong(System.currentTimeMillis())
-        val closedOnStatus = java.util.concurrent.atomic.AtomicBoolean(false)
-        val monitor = kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
-            while (!statusFile.exists()) {
-                if (readEof.get()) return@launch
-                kotlinx.coroutines.delay(STATUS_POLL_MS)
+            // [T-android-shell-fresh-process] Step 5. Publish the process so
+            // [stop] can reach it. The warm path's Stop button works by killing
+            // the session's long-lived shell; a fresh process is owned by this
+            // call frame and would otherwise be unreachable, so tapping Stop
+            // would leave the command running with no way to cancel it.
+            live = process
+            if (stopped) {
+                // Stop arrived between the check and the spawn. Honour it rather
+                // than running a command the user already cancelled.
+                runCatching { process.destroyForcibly() }
+                live = null
+                return@withContext Pair("[Cancelled]", CANCELLED_EXIT)
             }
-            val seenAt = System.currentTimeMillis()
-            while (!readEof.get()) {
-                val now = System.currentTimeMillis()
-                if (outputSettled(now, seenAt, lastReadAt.get())) {
-                    closedOnStatus.set(true)
-                    runCatching { process.inputStream.close() }
-                    Log.i(TAG, "[$sessionId] command exited; proot still tracing a detached process, left running")
-                    return@launch
+
+            val output = StringBuilder()
+
+            // [T-android-fresh-stderr-drain] Debug builds keep stderr on its own
+            // pipe (see spawn); it MUST be read, or a command that writes 64 KB to
+            // stderr blocks forever. Release merges stderr and needs no drain.
+            val stderrDrain = if (SEPARATE_STDERR) {
+                StderrDrain(process.errorStream) { Log.d("PRootStderr", it) }.start()
+            } else {
+                null
+            }
+
+            // The read below is a BLOCKING InputStream.read(). Coroutine
+            // cancellation cannot interrupt it — withTimeoutOrNull would fire its
+            // timer and then wait for the read anyway, so the timeout would not
+            // take effect until the command finished on its own (measured: a 5s
+            // timeout on `sleep 120` did not return). The only thing that unblocks
+            // a pipe read is the writer going away, so the watchdog kills the
+            // process and lets EOF end the loop naturally.
+            val timedOut = java.util.concurrent.atomic.AtomicBoolean(false)
+            val readEof = java.util.concurrent.atomic.AtomicBoolean(false)
+            val watchdog = kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+                kotlinx.coroutines.delay(timeout)
+                // [T-android-mcp-detached-daemon-hang] Do NOT gate this on
+                // `process.isAlive`.
+                //
+                // A command may leave behind a deliberately detached daemon:
+                // `minis-mcp-cli` forks one (setsid + its own session, fds 0/1/2
+                // reopened on /dev/null) so later calls reuse warm MCP
+                // connections. The daemon holds no pipe of its own — verified on
+                // device — but proot stays ptrace-attached to it, and a tracer
+                // cannot exit while its tracee lives. So proot remains alive
+                // holding the host pipe's write end long after the command
+                // printed its result and exited, and the blocking read below never
+                // sees EOF.
+                //
+                // Measured on a Pixel 6 / Android 17: `minis-mcp-cli list` wrote
+                // its complete output, yet the shell call was still running after
+                // 90s under a 30s guest `timeout`, with proot showing
+                // `TracerPid` = the surviving daemon.
+                //
+                // `process.isAlive` is TRUE in that state, so the old gate did let
+                // this path run — but it is also the case that a dead process
+                // still needs the stream closed, and closing is harmless either
+                // way. Run the unblock path unconditionally once the deadline
+                // passes rather than depending on which of the two shapes occurred.
+                //
+                // [T-android-fresh-exit-status-file] That completed command is now
+                // finished by the completion monitor below, not by this deadline;
+                // the watchdog only bounds a command that is genuinely still running.
+                run {
+                    timedOut.set(true)
+                    // [T-android-fresh-exit-status-file] Kill the command's own
+                    // process group, not proot: proot may also be the tracer of a
+                    // daemon an earlier command detached, and killing it would
+                    // leave that daemon running untraced and broken. See
+                    // [killCommand].
+                    killCommand(process, readEof)
+                    Log.i(TAG, "[$sessionId] timeout after ${timeout / 1000}s, command killed")
                 }
-                kotlinx.coroutines.delay(STATUS_POLL_MS)
             }
-        }
 
-        val exitCode = try {
-            // [T-android-fresh-utf8-stream] Decode through a STATEFUL reader,
-            // not per read(): an 8 KB read ends at an arbitrary byte offset, so
-            // decoding each chunk on its own split any multibyte character on
-            // the boundary into U+FFFD (a long CJK / emoji output came back
-            // with replacement characters sprinkled through it). The reader's
-            // decoder carries the incomplete tail into the next read. Closing
-            // process.inputStream (watchdog / Stop) still unblocks it, since
-            // the reader's read blocks in that same stream.
-            val buf = CharArray(8192)
-            val stream = java.io.InputStreamReader(process.inputStream, StandardCharsets.UTF_8)
-            while (true) {
-                val n = stream.read(buf)
-                if (n < 0) break
-                lastReadAt.set(System.currentTimeMillis())
-                output.append(buf, 0, n)
-                lineCallback?.let { lineBuffer.feed(buf, 0, n, it) }
+            // [T-android-fresh-exit-status-file] Completion monitor. The runner
+            // writes the status file once the command has exited; from then on
+            // everything the command wrote is already in the pipe. If proot then
+            // exits too, the read reaches EOF by itself and this does nothing. If
+            // proot stays — it is still tracing a detached daemon, and its own
+            // stdout IS this pipe — EOF never comes, so once the output has gone
+            // quiet the read end is closed here and the call completes, leaving
+            // proot (and the daemon) alone.
+            val lastReadAt = java.util.concurrent.atomic.AtomicLong(monotonicMillis())
+            val closedOnStatus = java.util.concurrent.atomic.AtomicBoolean(false)
+            val monitor = kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+                while (!statusFile.exists()) {
+                    if (readEof.get()) return@launch
+                    kotlinx.coroutines.delay(STATUS_POLL_MS)
+                }
+                val seenAt = monotonicMillis()
+                while (!readEof.get()) {
+                    val now = monotonicMillis()
+                    if (outputSettled(now, seenAt, lastReadAt.get())) {
+                        closedOnStatus.set(true)
+                        runCatching { process.inputStream.close() }
+                        Log.i(TAG, "[$sessionId] command exited; proot still tracing a detached process, left running")
+                        return@launch
+                    }
+                    kotlinx.coroutines.delay(STATUS_POLL_MS)
+                }
             }
-            readEof.set(true)
-            resolveExitCode(process, statusFile, closedOnStatus.get())
-        } catch (e: Exception) {
-            // A read that fails because the watchdog, Stop or the completion
-            // monitor closed the stream is the expected path, not an error.
-            readEof.set(true)
-            if (!timedOut.get() && !closedOnStatus.get() && !stopped) {
-                Log.w(TAG, "[$sessionId] read failed: ${e.message}")
+
+            val exitCode = try {
+                // [T-android-fresh-utf8-stream] Decode through a STATEFUL reader,
+                // not per read(): an 8 KB read ends at an arbitrary byte offset, so
+                // decoding each chunk on its own split any multibyte character on
+                // the boundary into U+FFFD (a long CJK / emoji output came back
+                // with replacement characters sprinkled through it). The reader's
+                // decoder carries the incomplete tail into the next read. Closing
+                // process.inputStream (watchdog / Stop) still unblocks it, since
+                // the reader's read blocks in that same stream.
+                val buf = CharArray(8192)
+                val stream = java.io.InputStreamReader(process.inputStream, StandardCharsets.UTF_8)
+                while (true) {
+                    val n = stream.read(buf)
+                    if (n < 0) break
+                    lastReadAt.set(monotonicMillis())
+                    output.append(buf, 0, n)
+                    outputCallback?.invoke(String(buf, 0, n))
+                    lineCallback?.let { lineBuffer.feed(buf, 0, n, it) }
+                }
+                readEof.set(true)
+                resolveExitCode(process, statusFile, closedOnStatus.get())
+            } catch (e: Exception) {
+                // A read that fails because the watchdog, Stop or the completion
+                // monitor closed the stream is the expected path, not an error.
+                readEof.set(true)
+                if (!timedOut.get() && !closedOnStatus.get() && !stopped) {
+                    Log.w(TAG, "[$sessionId] read failed: ${e.message}")
+                }
+                resolveExitCode(process, statusFile, closedOnStatus.get())
+            } finally {
+                watchdog.cancel()
+                monitor.cancel()
             }
-            resolveExitCode(process, statusFile, closedOnStatus.get())
+
+            // Stderr goes after stdout: separate pipes cannot be re-interleaved.
+            // When proot was left running its stderr never reaches EOF either, so
+            // do not spend the full wait on it.
+            val stderrWait = if (closedOnStatus.get()) STDERR_SETTLE_MS else STDERR_DRAIN_WAIT_MS
+            if (closedOnStatus.get()) runCatching { process.outputStream.close() }
+            stderrDrain?.finish(stderrWait)?.takeIf { it.isNotEmpty() }?.let { err ->
+                if (output.isNotEmpty() && output.last() != '\n') output.append('\n')
+                output.append(err)
+            }
+
+
+            if (stopped) {
+                // A user-initiated Stop is not a timeout: it must not be reported
+                // as 124, which the agent loop treats as "the command exceeded its
+                // budget" and may retry.
+                val partial = output.toString()
+                val notice = "[Cancelled]"
+                return@withContext Pair(
+                    if (partial.isBlank()) notice else "$partial\n$notice",
+                    CANCELLED_EXIT,
+                )
+            }
+
+            if (timedOut.get()) {
+                val partial = output.toString()
+                val notice = "[Command timed out after ${timeout / 1000}s]"
+                return@withContext Pair(
+                    if (partial.isBlank()) notice else "$partial\n$notice",
+                    124,
+                )
+            }
+
+            Pair(output.toString(), exitCode)
         } finally {
-            watchdog.cancel()
-            monitor.cancel()
+            live = null
+            statusHandle = null
+            registration.close()
         }
-
-        // Stderr goes after stdout: separate pipes cannot be re-interleaved.
-        // When proot was left running its stderr never reaches EOF either, so
-        // do not spend the full wait on it.
-        val stderrWait = if (closedOnStatus.get()) STDERR_SETTLE_MS else STDERR_DRAIN_WAIT_MS
-        if (closedOnStatus.get()) runCatching { process.outputStream.close() }
-        stderrDrain?.finish(stderrWait)?.takeIf { it.isNotEmpty() }?.let { err ->
-            if (output.isNotEmpty() && output.last() != '\n') output.append('\n')
-            output.append(err)
-        }
-
-        live = null
-        statusHandle = null
-        runCatching { statusFile.delete() }
-        runCatching { File(statusFile.path + ".pid").delete() }
-
-        if (stopped) {
-            // A user-initiated Stop is not a timeout: it must not be reported
-            // as 124, which the agent loop treats as "the command exceeded its
-            // budget" and may retry.
-            val partial = output.toString()
-            val notice = "[Cancelled]"
-            return@withContext Pair(
-                if (partial.isBlank()) notice else "$partial\n$notice",
-                CANCELLED_EXIT,
-            )
-        }
-
-        if (timedOut.get()) {
-            val partial = output.toString()
-            val notice = "[Command timed out after ${timeout / 1000}s]"
-            return@withContext Pair(
-                if (partial.isBlank()) notice else "$partial\n$notice",
-                124,
-            )
-        }
-
-        Pair(output.toString(), exitCode)
     }
 
     /** Build the argv and environment, mirroring PersistentShell.startProcess. */
@@ -402,8 +406,8 @@ internal class FreshProcessShell(
             runCatching { process.destroyForcibly() }
         } else {
             runCatching { android.system.Os.kill(-pgid, android.system.OsConstants.SIGKILL) }
-            val deadline = System.currentTimeMillis() + KILL_SETTLE_MS
-            while (readEof?.get() != true && System.currentTimeMillis() < deadline) {
+            val deadline = monotonicMillis() + KILL_SETTLE_MS
+            while (readEof?.get() != true && monotonicMillis() < deadline) {
                 runCatching { Thread.sleep(STATUS_POLL_MS) }
             }
         }
@@ -418,12 +422,6 @@ internal class FreshProcessShell(
         val v = runCatching { pidFile.readText().trim().toIntOrNull() }.getOrNull() ?: return null
         // 0 / 1 would mean "our own group" or init: never kill those.
         return if (v > 1) v else null
-    }
-
-    /** Drop status files a killed app left behind; they are tiny but unbounded. */
-    private fun pruneStaleExitFiles(dir: File) {
-        val cutoff = System.currentTimeMillis() - STALE_EXIT_FILE_MS
-        dir.listFiles()?.forEach { if (it.lastModified() < cutoff) it.delete() }
     }
 
     /**
@@ -557,8 +555,7 @@ internal class FreshProcessShell(
         /** After a group kill, how long to let proot exit before closing streams. */
         private const val KILL_SETTLE_MS = 1_000L
 
-        /** Status files older than this belong to a process that died mid-command. */
-        private const val STALE_EXIT_FILE_MS = 60 * 60_000L
+        private fun monotonicMillis(): Long = System.nanoTime() / 1_000_000L
 
         /**
          * [T-android-fresh-exit-status-file] Whether the stream may be closed

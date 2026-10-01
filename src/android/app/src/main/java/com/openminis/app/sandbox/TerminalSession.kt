@@ -146,11 +146,9 @@ class TerminalSession(private val context: Context) {
                 PRootKernel.boot(context)
                 if (!lifecycle.isCurrent(token)) return@launch
 
-                if (sessionId != null) {
-                    ExecutionCoordinator.envVarRepository?.allAsDict()?.let { envVars ->
-                        PRootKernel.customEnvironment.putAll(envVars)
-                    }
-                }
+                // User variables belong to this process's envMap below. Never
+                // put them in the shared base: deleting a setting must not leave
+                // an old value in later fresh shells or another terminal.
 
                 val cmdList = buildInteractiveCommand(sessionId)
                 val cmd = cmdList.first()

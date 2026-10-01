@@ -26,6 +26,7 @@ if [[ "${CI_RUN_TESTS:-true}" == "true" ]]; then
     ResponsesToolPairingTest ResponsesApiFinishedTest ResponsesIncompletePartialTest \
     'GlobalShellThrottle*Test' ProcSnapshotTest ShellLineBufferTest \
     ShellArrayOutputTest AnsiParserEventTest 'ChatSelection*Test' GitObjectConfigPolicyTest \
+    ShellOutputPreviewTest PythonRuntimePolicyTest PersistentShellOutputCallbackTest \
     NativeOffloadProtocolTest 'Fresh*Test' ForegroundCommandGroupTest SubAgentQueueTest \
     BackgroundRuntimePolicyTest 'SubAgent*Test' 'AgentJob*Test' 'HelperRunPolicy*Test' \
     'HelperRequest*Test' 'HelperCard*Test' ThinkingAutoCollapseTest \

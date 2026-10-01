@@ -12358,8 +12358,8 @@ class ChatViewModel(
                 withContext(Dispatchers.Main) {
                     updateAssistantMessage(assistantId, accumulatedText, false, allToolBlocks)
                 }
-                val turnParts = buildTurnParts(allToolBlocks, turnStartBlockIndex, toolInputMap)
-                val blockMeta = allToolBlocks.filter { it.kind == "tool_use" }.associateBy { it.id }
+                val turnParts = withContext(Dispatchers.Main) { buildTurnParts(allToolBlocks, turnStartBlockIndex, toolInputMap) }
+                val blockMeta = withContext(Dispatchers.Main) { allToolBlocks.filter { it.kind == "tool_use" }.associateBy { it.id } }
                 persistAssistantTurn(turnParts, lastUsage, turnReasoningContent, blockMeta, uiAssistantId = assistantId, streamMs = turnStreamMs)
                 // [T-error-persist-android] Empty-response hint: the model ended a
                 // turn (finish=stop/end_turn) with no visible text anywhere in the
@@ -12581,8 +12581,8 @@ class ChatViewModel(
             // the list reflects exactly what the model just emitted. Mirrors
             // iOS overlaying the live VM's last message over the DB value.
             run {
-                val livePreviewParts = buildTurnParts(allToolBlocks, turnStartBlockIndex, toolInputMap)
-                val liveMeta = allToolBlocks.filter { it.kind == "tool_use" }.associateBy { it.id }
+                val livePreviewParts = withContext(Dispatchers.Main) { buildTurnParts(allToolBlocks, turnStartBlockIndex, toolInputMap) }
+                val liveMeta = withContext(Dispatchers.Main) { allToolBlocks.filter { it.kind == "tool_use" }.associateBy { it.id } }
                 if (livePreviewParts.isNotEmpty()) {
                     chatRepository.updateSessionPreview(
                         realSessionId.ifEmpty { sessionId },
@@ -12703,15 +12703,15 @@ class ChatViewModel(
                                 append("part, then append the rest with follow-up calls, rather than repeating ")
                                 append("the same oversized call.")
                             }
-                            val refusedIdx = allToolBlocks.indexOfFirst { it.id == id }
-                            if (refusedIdx >= 0) {
-                                val elapsed = System.currentTimeMillis() - allToolBlocks[refusedIdx].startTimeMs
-                                allToolBlocks[refusedIdx] = allToolBlocks[refusedIdx].copy(
-                                    toolStatus = ToolBlockStatus.FAILED,
-                                    content = "Blocked: arguments were truncated in transit",
-                                    durationMs = elapsed,
-                                )
-                                withContext(Dispatchers.Main) {
+                            withContext(Dispatchers.Main) {
+                                val refusedIdx = allToolBlocks.indexOfFirst { it.id == id }
+                                if (refusedIdx >= 0) {
+                                    val elapsed = System.currentTimeMillis() - allToolBlocks[refusedIdx].startTimeMs
+                                    allToolBlocks[refusedIdx] = allToolBlocks[refusedIdx].copy(
+                                        toolStatus = ToolBlockStatus.FAILED,
+                                        content = "Blocked: arguments were truncated in transit",
+                                        durationMs = elapsed,
+                                    )
                                     updateAssistantMessage(assistantId, accumulatedText, true, allToolBlocks)
                                 }
                             }
@@ -12729,13 +12729,14 @@ class ChatViewModel(
                         val paramsMap = parseToolParams(argsStr)
                         // Flip PENDING → RUNNING right before the execute dispatch so the UI
                         // (tool pill spinner) shows the exact moment execution begins.
-                        val preIdx = allToolBlocks.indexOfFirst { it.id == id }
-                        if (preIdx >= 0 && allToolBlocks[preIdx].toolStatus == ToolBlockStatus.PENDING) {
-                            allToolBlocks[preIdx] = allToolBlocks[preIdx].copy(toolStatus = ToolBlockStatus.RUNNING)
-                            withContext(Dispatchers.Main) {
+                        withContext(Dispatchers.Main) {
+                            val preIdx = allToolBlocks.indexOfFirst { it.id == id }
+                            if (preIdx >= 0 && allToolBlocks[preIdx].toolStatus == ToolBlockStatus.PENDING) {
+                                allToolBlocks[preIdx] = allToolBlocks[preIdx].copy(toolStatus = ToolBlockStatus.RUNNING)
                                 updateAssistantMessage(assistantId, accumulatedText, true, allToolBlocks)
                             }
                         }
+
 
                         // Loop-detector check BEFORE execution. CRITICAL outcomes short-circuit
                         // the call: synthesize an error result so the tool_use/tool_result pair
@@ -12756,14 +12757,16 @@ class ChatViewModel(
                                 "[turn=$turn] tool BLOCKED by loop detector name=$name msg=$blockedMsg")
                             AppLogger.warning("ChatViewModel",
                                 "tool blocked by loop detector name=$name reason=$blockedMsg")
-                            val blockIdx = allToolBlocks.indexOfFirst { it.id == id }
-                            if (blockIdx >= 0) {
-                                val elapsed = System.currentTimeMillis() - allToolBlocks[blockIdx].startTimeMs
-                                allToolBlocks[blockIdx] = allToolBlocks[blockIdx].copy(
-                                    toolStatus = ToolBlockStatus.FAILED,
-                                    content = blockedMsg,
-                                    durationMs = elapsed,
-                                )
+                            withContext(Dispatchers.Main) {
+                                val blockIdx = allToolBlocks.indexOfFirst { it.id == id }
+                                if (blockIdx >= 0) {
+                                    val elapsed = System.currentTimeMillis() - allToolBlocks[blockIdx].startTimeMs
+                                    allToolBlocks[blockIdx] = allToolBlocks[blockIdx].copy(
+                                        toolStatus = ToolBlockStatus.FAILED,
+                                        content = blockedMsg,
+                                        durationMs = elapsed,
+                                    )
+                                }
                             }
                             // Record the blocked attempt so consecutive blocks still
                             // count toward the unknown-tool / circuit-breaker windows.
@@ -12805,14 +12808,16 @@ class ChatViewModel(
                             // localized R.string entry in a follow-up if needed.
                             val uiMessage = "Blocked invalid tool call"
                             val modelMessage = "Error: Tool call rejected before execution. $preflightError The arguments your client sent were empty or missing required fields — re-issue the call with all required parameters filled in. Do not retry with the same empty arguments."
-                            val blockIdxPre = allToolBlocks.indexOfFirst { it.id == id }
-                            if (blockIdxPre >= 0) {
-                                val elapsedPre = System.currentTimeMillis() - allToolBlocks[blockIdxPre].startTimeMs
-                                allToolBlocks[blockIdxPre] = allToolBlocks[blockIdxPre].copy(
-                                    toolStatus = ToolBlockStatus.FAILED,
-                                    content = uiMessage,
-                                    durationMs = elapsedPre,
-                                )
+                            withContext(Dispatchers.Main) {
+                                val blockIdxPre = allToolBlocks.indexOfFirst { it.id == id }
+                                if (blockIdxPre >= 0) {
+                                    val elapsedPre = System.currentTimeMillis() - allToolBlocks[blockIdxPre].startTimeMs
+                                    allToolBlocks[blockIdxPre] = allToolBlocks[blockIdxPre].copy(
+                                        toolStatus = ToolBlockStatus.FAILED,
+                                        content = uiMessage,
+                                        durationMs = elapsedPre,
+                                    )
+                                }
                             }
                             toolLoopDetector.record(
                                 toolName = name, params = paramsMap,
@@ -12852,65 +12857,67 @@ class ChatViewModel(
                             result.output
                         }
 
-                        val blockIdx = allToolBlocks.indexOfFirst { it.id == id }
-                        if (blockIdx >= 0) {
-                            val elapsed = System.currentTimeMillis() - allToolBlocks[blockIdx].startTimeMs
-                            // Keep live-streamed content if it has more data than the truncated result.
-                            // T263: takeLast(80) was applied uniformly, but it was sized for
-                            // shell_execute (long stdout streams where the tail is what
-                            // matters). For tools whose first line carries metadata —
-                            // file_read's `[path | N bytes | M lines | showing A-B of M]`
-                            // banner, file_write/file_edit confirmations, memory_* /
-                            // browser_use structured headers — clipping the head dropped
-                            // the banner entirely. iOS routes file_read through a
-                            // dedicated branch (AIChatViewModel.swift:5229) and avoids
-                            // this; mirror that intent by gating the trim to shell_execute.
-                            val existingContent = allToolBlocks[blockIdx].content
-                            val resultContent = if (name == "shell_execute") {
-                                result.output.lines().takeLast(80).joinToString("\n")
-                            } else {
-                                result.output
+                        withContext(Dispatchers.Main) {
+                            val blockIdx = allToolBlocks.indexOfFirst { it.id == id }
+                            if (blockIdx >= 0) {
+                                val elapsed = System.currentTimeMillis() - allToolBlocks[blockIdx].startTimeMs
+                                // Keep live-streamed content if it has more data than the truncated result.
+                                // T263: takeLast(80) was applied uniformly, but it was sized for
+                                // shell_execute (long stdout streams where the tail is what
+                                // matters). For tools whose first line carries metadata —
+                                // file_read's `[path | N bytes | M lines | showing A-B of M]`
+                                // banner, file_write/file_edit confirmations, memory_* /
+                                // browser_use structured headers — clipping the head dropped
+                                // the banner entirely. iOS routes file_read through a
+                                // dedicated branch (AIChatViewModel.swift:5229) and avoids
+                                // this; mirror that intent by gating the trim to shell_execute.
+                                val existingContent = allToolBlocks[blockIdx].content
+                                val resultContent = if (name == "shell_execute") {
+                                    result.output.lines().takeLast(80).joinToString("\n")
+                                } else {
+                                    result.output
+                                }
+                                val finalContent = if (existingContent.length > resultContent.length) existingContent else resultContent
+                                // [T-truncated-args-visibility #119] A call built from
+                                // truncated args must not render as a clean success — that
+                                // silence is the reported bug. Show it with the same weight
+                                // as the blocked path. Mirrors iOS ConcurrentTools.
+                                val finalStatus = when {
+                                    // [T-p2-background-helper] A background delegation returned
+                                    // `status: running`: the block stays RUNNING so the tool bar
+                                    // treats it as active; the completion hook flips it later.
+                                    name == com.openminis.app.agent.jobs.HelperRunner.TOOL_NAME &&
+                                        com.openminis.app.agent.jobs.HelperRunner.isRunningPayload(result.output) -> ToolBlockStatus.RUNNING
+                                    result.success && truncationRepairTag != null -> ToolBlockStatus.FAILED
+                                    result.success -> ToolBlockStatus.SUCCESS
+                                    result.timedOut -> ToolBlockStatus.TIMEOUT
+                                    else -> ToolBlockStatus.FAILED
+                                }
+                                // T-bg-overlay phase 1: tool finished — drop the
+                                // notification's indeterminate progress bar so the
+                                // user can tell streaming has paused (LLM step) vs
+                                // a tool is in flight.
+                                // [T-overlay-glyph-typed-outcome] Pass the typed
+                                // outcome so the bg overlay glyph reflects the real
+                                // SUCCESS / TIMEOUT / FAILED result instead of
+                                // text-sniffing the stale "Running: foo" status.
+                                val toolOutcome = when (finalStatus) {
+                                    ToolBlockStatus.SUCCESS -> com.openminis.app.service.ToolOutcome.Success
+                                    ToolBlockStatus.TIMEOUT -> com.openminis.app.service.ToolOutcome.Timeout
+                                    ToolBlockStatus.FAILED -> com.openminis.app.service.ToolOutcome.Error
+                                    else -> com.openminis.app.service.ToolOutcome.Unknown
+                                }
+                                SessionActivityTracker.clearToolRunning(toolOutcome)
+                                android.util.Log.d("ToolChain[VM]", "[turn=$turn] block[$blockIdx] status→$finalStatus title=${result.toolTitle} contentLen=${finalContent.length}")
+                                allToolBlocks[blockIdx] = allToolBlocks[blockIdx].copy(
+                                    toolStatus = finalStatus,
+                                    content = finalContent,
+                                    toolTitle = result.toolTitle.ifEmpty { allToolBlocks[blockIdx].toolTitle },
+                                    durationMs = elapsed,
+                                    browserURL = result.pageURL ?: allToolBlocks[blockIdx].browserURL,
+                                    imageFilePath = result.imageFilePath ?: allToolBlocks[blockIdx].imageFilePath,
+                                )
                             }
-                            val finalContent = if (existingContent.length > resultContent.length) existingContent else resultContent
-                            // [T-truncated-args-visibility #119] A call built from
-                            // truncated args must not render as a clean success — that
-                            // silence is the reported bug. Show it with the same weight
-                            // as the blocked path. Mirrors iOS ConcurrentTools.
-                            val finalStatus = when {
-                                // [T-p2-background-helper] A background delegation returned
-                                // `status: running`: the block stays RUNNING so the tool bar
-                                // treats it as active; the completion hook flips it later.
-                                name == com.openminis.app.agent.jobs.HelperRunner.TOOL_NAME &&
-                                    com.openminis.app.agent.jobs.HelperRunner.isRunningPayload(result.output) -> ToolBlockStatus.RUNNING
-                                result.success && truncationRepairTag != null -> ToolBlockStatus.FAILED
-                                result.success -> ToolBlockStatus.SUCCESS
-                                result.timedOut -> ToolBlockStatus.TIMEOUT
-                                else -> ToolBlockStatus.FAILED
-                            }
-                            // T-bg-overlay phase 1: tool finished — drop the
-                            // notification's indeterminate progress bar so the
-                            // user can tell streaming has paused (LLM step) vs
-                            // a tool is in flight.
-                            // [T-overlay-glyph-typed-outcome] Pass the typed
-                            // outcome so the bg overlay glyph reflects the real
-                            // SUCCESS / TIMEOUT / FAILED result instead of
-                            // text-sniffing the stale "Running: foo" status.
-                            val toolOutcome = when (finalStatus) {
-                                ToolBlockStatus.SUCCESS -> com.openminis.app.service.ToolOutcome.Success
-                                ToolBlockStatus.TIMEOUT -> com.openminis.app.service.ToolOutcome.Timeout
-                                ToolBlockStatus.FAILED -> com.openminis.app.service.ToolOutcome.Error
-                                else -> com.openminis.app.service.ToolOutcome.Unknown
-                            }
-                            SessionActivityTracker.clearToolRunning(toolOutcome)
-                            android.util.Log.d("ToolChain[VM]", "[turn=$turn] block[$blockIdx] status→$finalStatus title=${result.toolTitle} contentLen=${finalContent.length}")
-                            allToolBlocks[blockIdx] = allToolBlocks[blockIdx].copy(
-                                toolStatus = finalStatus,
-                                content = finalContent,
-                                toolTitle = result.toolTitle.ifEmpty { allToolBlocks[blockIdx].toolTitle },
-                                durationMs = elapsed,
-                                browserURL = result.pageURL ?: allToolBlocks[blockIdx].browserURL,
-                                imageFilePath = result.imageFilePath ?: allToolBlocks[blockIdx].imageFilePath,
-                            )
                         }
 
                         // [T-truncated-args-visibility #119] Tell the MODEL its own
@@ -12962,8 +12969,8 @@ class ChatViewModel(
             // Persist the assistant+tools turn (with full input JSON and thinking).
             // Capture the persisted DB id so we can back-fill agentHistory's last
             // assistant entry — compact-marker boundary resolution depends on it.
-            val turnParts = buildTurnParts(allToolBlocks, turnStartBlockIndex, toolInputMap)
-            val blockMeta = allToolBlocks.filter { it.kind == "tool_use" }.associateBy { it.id }
+            val turnParts = withContext(Dispatchers.Main) { buildTurnParts(allToolBlocks, turnStartBlockIndex, toolInputMap) }
+            val blockMeta = withContext(Dispatchers.Main) { allToolBlocks.filter { it.kind == "tool_use" }.associateBy { it.id } }
             val assistantDbId = persistAssistantTurn(turnParts, lastUsage, turnReasoningContent, blockMeta, uiAssistantId = assistantId, streamMs = turnStreamMs)
             if (assistantDbId != null) {
                 val lastIdx = agentHistory.indexOfLast { it.role == LLMMessage.Role.ASSISTANT && it.dbMessageId == null }
@@ -13087,7 +13094,7 @@ class ChatViewModel(
                     injectQueuedPromptsAsNewTurn(
                         finishedAssistantId = assistantId,
                         finishedAccumulatedText = accumulatedText,
-                        finishedAllToolBlocks = allToolBlocks,
+                        finishedAllToolBlocks = withContext(Dispatchers.Main) { allToolBlocks.toList() },
                         batch = insertBatch,
                     )
                 } catch (e: Exception) {
@@ -13402,7 +13409,8 @@ class ChatViewModel(
         } catch (_: Exception) {
             false
         }
-        val myIdx = toolBlocks.indexOfFirst { it.id == toolId }
+        val delegateSnapshot = withContext(Dispatchers.Main) { toolBlocks.toList() }
+        val myIdx = delegateSnapshot.indexOfFirst { it.id == toolId }
         // [T-android-subagent-turn-allowance] Count real DELEGATIONS, not every
         // subagent_task block. The tool is one entry point for five actions,
         // and a control call (status / steer / cancel / resume) starts no run
@@ -13411,7 +13419,7 @@ class ChatViewModel(
         // allowance on the check: three status calls and the first real
         // delegation of that turn was queued behind a queue it had no reason to
         // be in. iOS counts `.delegateTool` blocks only (HelperRunner.swift:319).
-        val priorDelegates = toolBlocks.take(myIdx.coerceAtLeast(0))
+        val priorDelegates = delegateSnapshot.take(myIdx.coerceAtLeast(0))
             .count {
                 it.kind == "tool_use" && hr.isSubAgentToolName(it.toolName) &&
                     !hr.isControlOnly(it.toolArgs.ifEmpty { null }, it.content.ifEmpty { null })
@@ -13614,13 +13622,13 @@ class ChatViewModel(
                 // streaming overlay — never drained, since every drain path is
                 // keyed by a real assistant id — which costs every later frame the
                 // overlay's fast path and re-keys the recomposition scopes.
-                if (assistantId.isEmpty()) {
-                    writeDelegateBlock(toolId, content, status)
-                    return
-                }
-                val i = toolBlocks.indexOfFirst { it.id == toolId }
-                if (i >= 0) toolBlocks[i] = toolBlocks[i].copy(content = content, toolTitle = toolBlocks[i].toolTitle.ifEmpty { title })
                 withContext(Dispatchers.Main) {
+                    if (assistantId.isEmpty()) {
+                        writeDelegateBlock(toolId, content, status)
+                        return@withContext
+                    }
+                    val i = toolBlocks.indexOfFirst { it.id == toolId }
+                    if (i >= 0) toolBlocks[i] = toolBlocks[i].copy(content = content, toolTitle = toolBlocks[i].toolTitle.ifEmpty { title })
                     writeDelegateBlock(toolId, content, status)
                     if (i >= 0) updateAssistantMessage(assistantId, currentText, true, toolBlocks)
                 }
@@ -14334,6 +14342,7 @@ class ChatViewModel(
         assistantId: String,
         currentText: String,
     ): ToolExecutionResult {
+        var preview: ShellOutputPreview? = null
         return try {
             val args = JSONObject(argsJson)
             var command = args.optString("command", "")
@@ -14366,21 +14375,21 @@ class ChatViewModel(
             // allowing other concurrent tasks to use it during the wait period.
             if (delaySec > 0) {
                 for (remaining in delaySec downTo 1) {
-                    val idx = toolBlocks.indexOfFirst { it.id == toolId }
-                    if (idx >= 0) {
-                        val mm = remaining / 60
-                        val ss = remaining % 60
-                        val countdown = if (mm > 0) String.format("%d:%02d", mm, ss) else "${ss}s"
-                        toolBlocks[idx] = toolBlocks[idx].copy(content = "⏳ Waiting $countdown before executing...")
-                        withContext(Dispatchers.Main) {
+                    withContext(Dispatchers.Main) {
+                        val idx = toolBlocks.indexOfFirst { it.id == toolId }
+                        if (idx >= 0) {
+                            val mm = remaining / 60
+                            val ss = remaining % 60
+                            val countdown = if (mm > 0) String.format("%d:%02d", mm, ss) else "${ss}s"
+                            toolBlocks[idx] = toolBlocks[idx].copy(content = "⏳ Waiting $countdown before executing...")
                             updateAssistantMessage(assistantId, currentText, true, toolBlocks)
                         }
                     }
                     kotlinx.coroutines.delay(1000)
                 }
-                val idx = toolBlocks.indexOfFirst { it.id == toolId }
-                if (idx >= 0) {
-                    toolBlocks[idx] = toolBlocks[idx].copy(content = "")
+                withContext(Dispatchers.Main) {
+                    val idx = toolBlocks.indexOfFirst { it.id == toolId }
+                    if (idx >= 0) toolBlocks[idx] = toolBlocks[idx].copy(content = "")
                 }
             }
 
@@ -14425,34 +14434,32 @@ class ChatViewModel(
                 }
             }
 
+            val executionContext = kotlinx.coroutines.currentCoroutineContext()
+            val executionJob = executionContext[Job]
+            val previewSessionId = activeSessionId
+            val outputPreview = ShellOutputPreview(
+                kotlinx.coroutines.CoroutineScope(executionContext), Dispatchers.Main, offerUrl = { MinisOpenUrlBroker.offer(it) },
+            ) { text ->
+                val idx = toolBlocks.indexOfFirst { it.id == toolId }
+                val message = _messages.value.lastOrNull { it.id == assistantId }
+                if (ShellPreviewPublishPolicy.mayPublish(
+                        parentActive = executionJob?.isActive == true,
+                        sameSession = activeSessionId == previewSessionId,
+                        messageStreaming = message?.isStreaming == true,
+                        blockRunning = idx >= 0 && toolBlocks[idx].toolStatus == ToolBlockStatus.RUNNING,
+                    )) {
+                    toolBlocks[idx] = toolBlocks[idx].copy(content = text)
+                    updateAssistantMessage(assistantId, currentText, true, toolBlocks, toolPreviewUpdate = true)
+                }
+            }
+            preview = outputPreview
+
             var result = ExecutionCoordinator.execute(
                 sessionId = dispatchSessionId,
                 fsSessionId = fsSessionId,
                 command = command,
                 timeout = timeoutSec * 1000L,
-                lineCallback = lc@{ rawLine ->
-                    // Strip any OSC MinisOpenURL markers emitted by
-                    // /usr/local/bin/minis-open and forward the captured
-                    // URLs to the broker so the chat screen can present the
-                    // in-app preview. Lines that were *entirely* a marker
-                    // (nothing visible afterwards) are dropped so the tool
-                    // output doesn't grow blank rows.
-                    val (cleanedLine, capturedUrls) = MinisUrlMarker.extract(rawLine)
-                    for (raw in capturedUrls) MinisOpenUrlBroker.offer(raw)
-                    if (cleanedLine.isEmpty() && rawLine.isNotEmpty()) return@lc
-
-                    val idx = toolBlocks.indexOfFirst { it.id == toolId }
-                    if (idx >= 0) {
-                        val current = toolBlocks[idx].content
-                        val updated = if (current.isEmpty()) cleanedLine else "$current\n$cleanedLine"
-                        // Keep last 50 lines for display
-                        val trimmed = updated.lines().takeLast(50).joinToString("\n")
-                        toolBlocks[idx] = toolBlocks[idx].copy(content = trimmed)
-                        viewModelScope.launch(Dispatchers.Main) {
-                            updateAssistantMessage(assistantId, currentText, true, toolBlocks)
-                        }
-                    }
-                },
+                outputCallback = { chunk -> outputPreview.appendChunk(chunk) },
             )
 
             // [T-bash-on-demand] M5 self-heal: our bash wrapper returns sentinel
@@ -14521,8 +14528,15 @@ class ChatViewModel(
                 toolTitle = toolTitle,
                 timedOut = timedOut,
             )
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             ToolExecutionResult("Error: ${e.message}", false)
+        } finally {
+            withContext(NonCancellable) {
+                preview?.flush()
+                preview?.stop()
+            }
         }
     }
 
@@ -14773,6 +14787,7 @@ class ChatViewModel(
         isStreaming: Boolean,
         toolBlocksIn: List<AssistantBlock>,
         isAwaitingModelResponse: Boolean = false,
+        toolPreviewUpdate: Boolean = false,
     ) {
         val toolBlocks = mergeDelegateOverrides(toolBlocksIn)
         // T-streaming-side-channel: during a live turn, write high-frequency
@@ -14839,7 +14854,7 @@ class ChatViewModel(
                 st.lastFlushedLen = text.length
             }
 
-            if (structuralChange || elapsed >= throttle || newlineFlush) {
+            if (ShellPreviewPublishPolicy.shouldFlush(structuralChange, elapsed, throttle, newlineFlush, toolPreviewUpdate)) {
                 st.trailingJob?.cancel()
                 st.trailingJob = null
                 st.pendingContent = null

@@ -51,6 +51,27 @@ class TerminalBuffer(
         return savedCursorStyle.copy()
     }
 
+    private var cachedForeground: TerminalColor = TerminalColor.Default
+    private var cachedBackground: TerminalColor = TerminalColor.Default
+    private var cachedAttributes = TextAttributes()
+    private var asciiCells: Array<TerminalCell?> = arrayOfNulls(95)
+
+    private fun asciiCell(cp: Int, style: CursorStyle): TerminalCell {
+        if (style.foreground === TerminalColor.Default &&
+            style.background === TerminalColor.Default && style.attributes.bits == 0
+        ) return DEFAULT_ASCII_CELLS[cp - 0x20]
+        if (cachedForeground != style.foreground || cachedBackground != style.background ||
+            cachedAttributes != style.attributes
+        ) {
+            cachedForeground = style.foreground
+            cachedBackground = style.background
+            cachedAttributes = style.attributes
+            asciiCells.fill(null)
+        }
+        val index = cp - 0x20
+        return asciiCells[index] ?: style.makeCell(cp).also { asciiCells[index] = it }
+    }
+
     // ── Writing ────────────────────────────────────────────────────────────
     fun writeChar(codePoint: Int, style: CursorStyle, autoWrap: Boolean) {
         val width = characterWidth(codePoint).coerceAtMost(cols)
@@ -63,7 +84,8 @@ class TerminalBuffer(
             else cursorCol = cols - 2
         }
         if (cursorRow in 0 until rows && cursorCol in 0 until cols) {
-            grid[cursorRow][cursorCol] = style.makeCell(codePoint, width)
+            grid[cursorRow][cursorCol] = if (codePoint in 0x20..0x7E)
+                asciiCell(codePoint, style) else style.makeCell(codePoint, width)
             if (width == 2 && cursorCol + 1 < cols) {
                 grid[cursorRow][cursorCol + 1] = TerminalCell(
                     char = ' '.code,
@@ -197,6 +219,14 @@ class TerminalBuffer(
     // ── Resize ─────────────────────────────────────────────────────────────
     fun resize(newCols: Int, newRows: Int) {
         if (newCols <= 0 || newRows <= 0) return
+        if (newCols == cols && newRows == rows) {
+            // Preserve resize's region/wrap reset, including alternate-screen entry.
+            resetScrollRegion()
+            cursorCol = minOf(cursorCol, newCols - 1)
+            cursorRow = minOf(cursorRow, newRows - 1)
+            wrapPending = false
+            return
+        }
         val newGrid = Array(newRows) { r ->
             Array(newCols) { c ->
                 if (r < rows && c < cols) grid[r][c] else TerminalCell.BLANK
@@ -221,6 +251,9 @@ class TerminalBuffer(
     private fun clampRow(r: Int) = maxOf(0, minOf(r, rows - 1))
 
     companion object {
+        // Immutable cells can be shared by screen and history; row arrays cannot.
+        private val DEFAULT_ASCII_CELLS = Array(95) { TerminalCell(it + 0x20) }
+
         /** Return 2 for CJK / emoji fullwidth characters, else 1. */
         fun characterWidth(cp: Int): Int {
             // Emoji pictographic ranges (simplified from iOS — covers common cases)

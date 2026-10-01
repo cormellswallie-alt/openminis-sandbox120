@@ -96,8 +96,20 @@ fun TerminalScreen(
 
     // Pipe PTY output → emulator.
     LaunchedEffect(terminalSession) {
+        // Keep all emulator mutations on Main alongside resize and selection.
+        // The deadline spans emissions too: many small queued reads must also yield.
+        var deadline = System.nanoTime() + 4_000_000L
         terminalSession.outputBytes.collect { bytes ->
-            emulator.feed(bytes)
+            var offset = 0
+            while (offset < bytes.size) {
+                val end = minOf(bytes.size, offset + 4096)
+                emulator.feed(bytes, offset, end - offset)
+                offset = end
+                if (System.nanoTime() >= deadline) {
+                    kotlinx.coroutines.delay(1)
+                    deadline = System.nanoTime() + 4_000_000L
+                }
+            }
         }
     }
 

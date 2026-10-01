@@ -189,6 +189,9 @@ object PRootKernel {
         //   for the iSH emulator, same cap is a sensible default under
         //   PRoot on Android where the sandbox is also IO-bound.
         customEnvironment.putIfAbsent("NO_COLOR", "1")
+        // Keep the terminal's normal TTY buffering and avoid user-script pyc files.
+        // Streaming tool shells apply PythonRuntimePolicy only when a caller
+        // subscribes to their output; explicit user values still override it.
         customEnvironment.putIfAbsent("PYTHONDONTWRITEBYTECODE", "1")
         customEnvironment.putIfAbsent("GOMAXPROCS", "2")
 

@@ -2,7 +2,7 @@
 
 ## This Android source snapshot
 
-This repository publishes OpenMinis Sandbox 120 1.14.6. It contains vendored dependency snapshots and the ARM64 native restore bundle under `ci/native`; the upstream instructions below describe source builds and may refer to submodules absent from this snapshot. Android is the validated target. The included iOS resources are references, not a complete validated iOS release.
+This repository publishes OpenMinis Sandbox 120 1.14.7. It contains vendored dependency snapshots and the ARM64 native restore bundle under `ci/native`; the upstream instructions below describe source builds and may refer to submodules absent from this snapshot. Android is the validated target. The included iOS resources are references, not a complete validated iOS release.
 
 ```sh
 git clone https://github.com/cormellswallie-alt/openminis-sandbox120.git

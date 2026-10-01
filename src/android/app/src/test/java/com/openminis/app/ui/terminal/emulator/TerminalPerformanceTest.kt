@@ -4,6 +4,47 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class TerminalPerformanceTest {
+    @Test fun `full feed preserves fixed Unicode color DSR selection and history expectations`() {
+        val em = TerminalEmulator(8, 2)
+        val responses = mutableListOf<String>()
+        em.onResponse = { responses.add(it.toString(Charsets.UTF_8)) }
+        val version = em.version.value
+        em.feed("AB\u001b[31m中\u001b[0m😀\u001b[6n".toByteArray())
+        assertEquals(version + 1, em.version.value)
+        assertEquals(listOf("\u001b[1;7R"), responses)
+        assertEquals(TerminalColor.Indexed(1), em.activeBuffer.grid[0][2].foreground)
+        assertEquals(2, em.activeBuffer.grid[0][2].width)
+        assertTrue(em.activeBuffer.grid[0][3].isWideTrailer)
+        assertEquals(0x1F600, em.activeBuffer.grid[0][4].char)
+        assertEquals("AB中 😀", em.getSelectedText(0, 0, 4, 0))
+        val history = TerminalEmulator(8, 2)
+        history.feed("one\r\ntwo\r\nthree".toByteArray())
+        assertEquals(1, history.primaryBuffer.scrollback.size)
+        history.scrollOffset = 1
+        assertEquals("one\ntwo", history.getSelectedText(0, 0, 7, 1))
+        history.setSelectionRect(0, 0, 2, 1)
+        history.feed("\r\nfour".toByteArray())
+        assertArrayEquals(intArrayOf(0, 0, 2, 1), history.selectionRect.value)
+    }
+
+    @Test fun `same size resize preserves cells but resets region and wrap`() {
+        val buf = TerminalBuffer(8, 4)
+        val style = CursorStyle()
+        buf.writeChar('A'.code, style, true)
+        buf.setScrollRegion(2, 3)
+        buf.wrapPending = true
+        buf.resize(8, 4)
+        assertEquals('A'.code, buf.grid[0][0].char)
+        assertEquals(0, buf.scrollTop)
+        assertEquals(3, buf.scrollBottom)
+        assertFalse(buf.wrapPending)
+        val row = buf.grid[0]
+        buf.scrollUp(1)
+        buf.writeChar('B'.code, style, true)
+        assertEquals('A'.code, row[0].char)
+        assertSame(row, buf.scrollback.first())
+    }
+
     @Test fun `ANSI and UTF8 parsing matches whole input across arbitrary chunk boundaries`() {
         val random = java.util.Random(731)
         val input = ("abc\r\n\u001b[31m中文😀\u001b[0m\u001b]2;title\u0007" +
@@ -27,6 +68,44 @@ class TerminalPerformanceTest {
             }
         }
         assertEquals(expected, actual)
+    }
+
+    @Test fun `random full feeds match byte chunks through resize history and selection`() {
+        val random = java.util.Random(117)
+        val whole = TerminalEmulator(12, 4)
+        val chunked = TerminalEmulator(12, 4)
+        val wholeResponses = mutableListOf<String>()
+        val chunkedResponses = mutableListOf<String>()
+        whole.onResponse = { wholeResponses.add(it.toString(Charsets.UTF_8)) }
+        chunked.onResponse = { chunkedResponses.add(it.toString(Charsets.UTF_8)) }
+        val tokens = listOf("abc 123", "中文😀", "\r\n", "\u001b[31mred\u001b[0m",
+            "\u001b[2J", "\u001b[2S", "\u001b[1T", "\u001b[2;3H", "\u001b[2L", "\u001b[2P",
+            "\u001b[?1049hALT\u001b[?1049l", "\u001b[6n", "\u001b]2;title\u0007")
+        repeat(500) { iteration ->
+            val data = tokens[random.nextInt(tokens.size)].toByteArray()
+            whole.feed(data)
+            data.forEach { chunked.feed(byteArrayOf(it)) }
+            if (iteration % 11 == 0) {
+                val cols = 1 + random.nextInt(20); val rows = 1 + random.nextInt(8)
+                whole.resize(cols, rows); chunked.resize(cols, rows)
+            }
+            for ((a, b) in listOf(whole.primaryBuffer to chunked.primaryBuffer,
+                whole.alternateBuffer to chunked.alternateBuffer)) {
+                assertEquals(a.cursorCol, b.cursorCol); assertEquals(a.cursorRow, b.cursorRow)
+                assertEquals(a.wrapPending, b.wrapPending)
+                assertEquals(a.scrollTop, b.scrollTop); assertEquals(a.scrollBottom, b.scrollBottom)
+                assertEquals(a.scrollback.size, b.scrollback.size)
+                for (r in a.grid.indices) assertArrayEquals(a.grid[r], b.grid[r])
+                for (r in a.scrollback.indices) assertArrayEquals(a.scrollback[r], b.scrollback[r])
+            }
+            val offset = random.nextInt(whole.activeBuffer.scrollback.size + 1)
+            whole.scrollOffset = offset; chunked.scrollOffset = offset
+            assertEquals(whole.getSelectedText(0, 0, whole.cols - 1, whole.rows - 1),
+                chunked.getSelectedText(0, 0, chunked.cols - 1, chunked.rows - 1))
+            assertEquals(wholeResponses, chunkedResponses)
+            assertEquals(whole.title, chunked.title)
+            assertEquals(whole.isAlternateActive, chunked.isAlternateActive)
+        }
     }
 
     private fun filled(): TerminalBuffer = TerminalBuffer(8, 6, 3).also { buffer ->
